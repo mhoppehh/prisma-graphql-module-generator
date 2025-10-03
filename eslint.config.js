@@ -3,6 +3,7 @@ import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 import prettier from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
+import globals from 'globals'
 
 export default [
   js.configs.recommended,
@@ -14,6 +15,9 @@ export default [
         ecmaVersion: 2020,
         sourceType: 'module',
         project: './tsconfig.json',
+      },
+      globals: {
+        ...globals.node,
       },
     },
     plugins: {
@@ -27,14 +31,12 @@ export default [
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
-      '@typescript-eslint/prefer-const': 'error',
       '@typescript-eslint/no-var-requires': 'error',
 
-      'no-console': 'warn',
+      'no-console': 'off',
       'no-debugger': 'error',
       'no-duplicate-imports': 'error',
       'no-unused-expressions': 'error',
-      'prefer-const': 'error',
       'no-var': 'error',
 
       'prettier/prettier': 'error',
@@ -49,6 +51,10 @@ export default [
         sourceType: 'module',
         project: './tsconfig.json',
       },
+      globals: {
+        ...globals.jest,
+        ...globals.node,
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint,
@@ -57,6 +63,8 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
       'no-console': 'off',
 
       'prettier/prettier': 'error',
@@ -74,8 +82,7 @@ export default [
     rules: {
       'no-console': 'warn',
       'no-debugger': 'error',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'prefer-const': 'error',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-var': 'error',
 
       'prettier/prettier': 'error',

@@ -28,7 +28,8 @@ Create a `generator.config.json` file in your project root:
     },
     "templates": {
       "graphqlTemplate": "custom-templates/schema.hbs",
-      "resolverTemplate": "custom-templates/resolvers.hbs"
+      "resolverTemplate": "custom-templates/resolvers.hbs",
+      "baseGraphqlTemplate": "custom-templates/base.hbs"
     },
     "baseGraphqlPath": "src/schema/base.graphql"
   },
@@ -91,12 +92,16 @@ export default config
 
 - `extensions.graphql`: GraphQL file extension (default: `.graphql`)
 - `extensions.resolver`: Resolver file extension (default: `.resolver.ts`)
-- `templates.graphqlTemplate`: Path to GraphQL template
-- `templates.resolverTemplate`: Path to resolver template
+- `templates.graphqlTemplate`: Path to GraphQL module template (relative to `templatesBasePath`)
+- `templates.resolverTemplate`: Path to resolver module template (relative to `templatesBasePath`)
+- `templates.baseGraphqlTemplate`: Path to base GraphQL template (relative to `templatesBasePath`)
 - `fallbackFiles.schemaTs`: Fallback TypeScript schema filename
 - `fallbackFiles.schemaGraphql`: Fallback GraphQL schema filename
 - `fallbackFiles.optionsJson`: Options JSON filename
 - `baseGraphqlPath`: Path to base GraphQL file for enums
+- `baseModulePath`: Base path for generated modules
+- `presetsFilePath`: Path to presets JSON file
+- `templatesBasePath`: Base path for templates directory (default: `node_modules/prisma-graphql-module-generator/dist/src`)
 
 ### Content Configuration
 
@@ -195,6 +200,39 @@ Create your own Handlebars templates and configure their paths:
       "DateTime": "Date",
       "Json": "JSONObject",
       "Decimal": "BigInt"
+    }
+  }
+}
+```
+
+### 5. Custom Templates Base Path
+
+If you want to use custom templates or the package is installed in a non-standard location, you can configure the base path for templates:
+
+```json
+{
+  "files": {
+    "templatesBasePath": "node_modules/prisma-graphql-module-generator/dist/src"
+  }
+}
+```
+
+**Important**: The `templatesBasePath` is resolved relative to `process.cwd()` (your project root), not the package installation location. This ensures templates are found correctly whether the package is:
+
+- Installed in `node_modules`
+- Linked locally for development
+- Used in a monorepo setup
+
+The default value `node_modules/prisma-graphql-module-generator/dist/src` works for standard npm/pnpm installations. If you're using a custom template directory, set this to your templates location:
+
+```json
+{
+  "files": {
+    "templatesBasePath": "custom/templates/path",
+    "templates": {
+      "graphqlTemplate": "module.graphql.hbs",
+      "resolverTemplate": "module.resolver.ts.hbs",
+      "baseGraphqlTemplate": "base.graphql.hbs"
     }
   }
 }

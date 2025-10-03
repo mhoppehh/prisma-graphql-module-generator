@@ -14,6 +14,7 @@ const config: GeneratorConfig = {
     templates: {
       graphqlTemplate: 'templates/handlebars/module.graphql.hbs',
       resolverTemplate: 'templates/handlebars/module.resolver.ts.hbs',
+      baseGraphqlTemplate: 'templates/handlebars/base.graphql.hbs',
     },
     fallbackFiles: {
       schemaTs: 'schema.ts',
@@ -23,6 +24,7 @@ const config: GeneratorConfig = {
     baseGraphqlPath: 'src/subgraphs/base.graphql',
     baseModulePath: 'src/subgraphs/',
     presetsFilePath: 'prisma/presets.json',
+    templatesBasePath: 'node_modules/prisma-graphql-module-generator/dist/src',
   },
 
   content: {

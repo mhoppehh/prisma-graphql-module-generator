@@ -16,6 +16,7 @@ import { readExistingFile } from '../../utils/readExistingFile'
 import { writeFileSafely } from '../../utils/writeFileSafely'
 import { generateParameterCombinations } from '../../utils/testCombinatorics'
 import path from 'path'
+import fs from 'fs'
 import options from '../__fixtures__/options.patched'
 
 jest.mock('prettier', () => ({
@@ -29,6 +30,7 @@ jest.mock('fs', () => ({
   promises: {
     writeFile: jest.fn().mockResolvedValue(undefined),
     readFile: jest.fn().mockResolvedValue('enum SortOrder { asc desc }'),
+    existsSync: jest.fn().mockReturnValue(true),
   },
 }))
 

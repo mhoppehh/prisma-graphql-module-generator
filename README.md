@@ -99,6 +99,104 @@ This will generate:
 - `./generated/user.graphql` - GraphQL schema definitions
 - `./generated/user.resolver.ts` - TypeScript resolvers
 
+## 🎯 Interactive CLI
+
+For a more user-friendly experience, use the interactive CLI tool that guides you through the generation process:
+
+### Installation
+
+```bash
+# Install as a dev dependency
+npm install -D prisma-graphql-module-generator
+# or
+pnpm add -D prisma-graphql-module-generator
+```
+
+### Usage
+
+#### Interactive Mode
+
+Launch the interactive CLI to be guided through module generation:
+
+```bash
+npx prisma-gql-cli
+```
+
+This will present you with options to:
+
+- 🆕 **Create new GraphQL module** - Full configuration with all options
+- 📋 **Use saved preset** - Quickly reuse previously saved configurations
+- ⚡ **Quick generate** - Generate basic CRUD operations with minimal input
+
+#### Command Line Mode
+
+Use presets or flags directly from the command line:
+
+```bash
+# List all available presets
+npx prisma-gql-cli --list
+
+# Show help
+npx prisma-gql-cli --help
+
+# Use a specific preset
+npx prisma-gql-cli my-preset-name
+```
+
+### Interactive Features
+
+**Model Selection**
+
+- Automatically detects Prisma models from your schema
+- Allows manual input if schema is not accessible
+
+**Operation Selection**
+
+- Choose which components to generate:
+  - SDL (Schema Definition Language)
+  - Queries (findUnique, findMany, count, aggregate, groupBy)
+  - Mutations (create, update, delete, createMany, updateMany, deleteMany, upsert)
+
+**Existing File Detection**
+
+- Scans for existing GraphQL modules
+- Warns you about potential overwrites
+- Smart defaults based on existing files
+
+**Preset Management**
+
+- Save your configurations as reusable presets
+- List all saved presets with `--list`
+- Execute presets directly by name
+
+### Example Workflow
+
+```bash
+# Run the interactive CLI
+npx prisma-gql-cli
+
+# Select "Create new GraphQL module"
+# Choose your model (e.g., "User")
+# Select SDL, Queries, and Mutations
+# Choose specific queries: findUnique, findMany
+# Choose specific mutations: create, update, delete
+# Save as preset: "user-basic-crud"
+
+# Later, reuse the preset
+npx prisma-gql-cli user-basic-crud
+```
+
+### Quick Generate
+
+For rapid prototyping, use the quick generate option:
+
+```bash
+npx prisma-gql-cli
+# Select "Quick generate (basic CRUD)"
+# Choose your model
+# Done! Generates SDL + findUnique/findMany queries + create/update/delete mutations
+```
+
 ## 📚 Configuration
 
 ### Configuration Methods
@@ -281,10 +379,13 @@ pnpm dev
 ```
 prisma-graphql-module-generator/
 ├── src/
-│   ├── bin.ts                 # CLI entry point
+│   ├── bin.ts                 # Prisma generator entry point
+│   ├── bin-cli.ts             # Interactive CLI entry point
+│   ├── cli.ts                 # Interactive CLI implementation
 │   ├── generator.ts           # Main generator logic
 │   ├── helpers.ts             # Helper functions
 │   ├── constants.ts           # Constants and defaults
+│   ├── optionsLoader.ts       # Options loading utilities
 │   ├── config/                # Configuration system
 │   │   ├── config.ts         # Configuration loader
 │   │   ├── config.default.ts # Default configuration
@@ -301,6 +402,7 @@ prisma-graphql-module-generator/
 ├── examples/                  # Usage examples
 ├── tests/                     # Test files
 └── prisma/                    # Example Prisma schema
+    └── presets.json          # Saved CLI presets
 ```
 
 ### Available Scripts

@@ -134,7 +134,11 @@ const addEnumToBase = async (enumName: string, dmmf: DMMF.Document): Promise<voi
       const baseDir = path.dirname(baseGraphQLPath)
       await fs.mkdir(baseDir, { recursive: true })
 
-      const templatePath = path.join(__dirname, 'templates/handlebars/base.graphql.hbs')
+      const templatePath = path.resolve(
+        process.cwd(),
+        configData.files.templatesBasePath,
+        configData.files.templates.baseGraphqlTemplate,
+      )
       const templateExists = await fileExists(templatePath)
 
       if (!templateExists) {
@@ -520,7 +524,11 @@ async function compileTemplateFile(
     errorMessageTemplate: configData.content.resolverImplementation.errorMessageTemplate,
   }
 
-  const templatePath = path.join(__dirname, templateFilePath)
+  const templatePath = path.resolve(
+    process.cwd(),
+    configData.files.templatesBasePath,
+    templateFilePath,
+  )
   const templateContent = await fs.readFile(templatePath, 'utf-8')
   const template = Handlebars.compile(templateContent)
   const renderedContent = template(templateData)

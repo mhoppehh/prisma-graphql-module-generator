@@ -18,6 +18,7 @@ export interface GeneratorConfig {
     templates: {
       graphqlTemplate: string
       resolverTemplate: string
+      baseGraphqlTemplate: string
     }
     fallbackFiles: {
       schemaTs: string
@@ -27,6 +28,7 @@ export interface GeneratorConfig {
     baseGraphqlPath: string
     baseModulePath: string
     presetsFilePath: string
+    templatesBasePath: string
   }
   content: {
     fallbackMessages: {
@@ -54,6 +56,7 @@ export interface PartialGeneratorConfig {
     baseGraphqlPath?: string
     baseModulePath?: string
     presetsFilePath?: string
+    templatesBasePath?: string
   }
   content?: {
     fallbackMessages?: Partial<GeneratorConfig['content']['fallbackMessages']>
@@ -107,6 +110,7 @@ export class ConfigLoader {
         baseGraphqlPath: overrides.files?.baseGraphqlPath || base.files.baseGraphqlPath,
         baseModulePath: overrides.files?.baseModulePath || base.files.baseModulePath,
         presetsFilePath: overrides.files?.presetsFilePath || base.files.presetsFilePath,
+        templatesBasePath: overrides.files?.templatesBasePath || base.files.templatesBasePath,
       },
       content: {
         fallbackMessages: {
