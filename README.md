@@ -15,11 +15,11 @@ A powerful and extensible Prisma generator that creates GraphQL schemas and Type
 - **🔄 Automatic GraphQL Schema Generation**: Convert Prisma models to GraphQL types, inputs, queries, and mutations
 - **📝 TypeScript Resolver Generation**: Generate type-safe resolvers with proper Prisma client integration
 - **🔌 Extensible Plugin System**: Built-in plugins for logging, formatting, validation, and field transformations
-- **⚙️ Highly Configurable**: Flexible configuration via JSON files, environment variables, or TypeScript configs
+- **⚙️ Highly Configurable**: Flexible configuration via JSON files or TypeScript configs
 - **🎨 Handlebars Templates**: Customizable output templates for both GraphQL schemas and resolvers
 - **🔍 Smart Type Mapping**: Automatic conversion between Prisma and GraphQL types
 - **📦 Custom Pluralization**: Support for custom plural forms and naming conventions
-- **🛡️ Environment-Based Generation**: Configure different outputs based on environment variables
+- **🎯 Interactive CLI**: User-friendly command-line interface with preset management
 
 ## 📦 Installation
 
@@ -73,22 +73,19 @@ model Post {
 }
 ```
 
-### 2. Set Environment Variables
+### 2. Use the Interactive CLI
 
-Configure the generator behavior using environment variables:
+The easiest way to generate GraphQL files is using the interactive CLI:
 
 ```bash
-# Required: Specify which model and operations to generate
-export GENERATOR_MODEL="User"
-export GENERATOR_MODULE_PATH="user"
-export GENERATOR_QUERIES="findUser,findUsers,countUsers"
-export GENERATOR_MUTATIONS="createUser,updateUser,deleteUser"
-
-# Optional: Custom pluralization
-export GENERATOR_CUSTOM_PLURALS="user:users,post:posts"
+npx prisma-gql-cli
 ```
 
+Select your model, choose which operations to generate (queries, mutations, SDL), and the tool will guide you through the process.
+
 ### 3. Generate GraphQL Files
+
+After using the CLI tool, run Prisma generate:
 
 ```bash
 npx prisma generate
@@ -203,10 +200,9 @@ npx prisma-gql-cli
 
 The generator supports multiple configuration methods (in order of priority):
 
-1. **Environment Variables** (highest priority)
-2. **JSON Configuration Files**
-3. **TypeScript Configuration Files**
-4. **Default Values** (lowest priority)
+1. **JSON Configuration Files** (highest priority)
+2. **TypeScript Configuration Files** (for advanced use)
+3. **Default Values** (lowest priority)
 
 ### JSON Configuration
 
@@ -221,11 +217,17 @@ Create a `generator.config.json` file in your project root:
   "files": {
     "extensions": {
       "graphql": ".graphql",
-      "resolver": ".ts"
+      "resolver": ".resolver.ts"
     },
     "templates": {
       "graphqlTemplate": "templates/handlebars/module.graphql.hbs",
       "resolverTemplate": "templates/handlebars/module.resolver.ts.hbs"
+    }
+  },
+  "content": {
+    "resolverImplementation": {
+      "dataSourceMethod": "context.dataSources.prisma()",
+      "errorMessageTemplate": "{operationName} resolver not implemented"
     }
   },
   "typeMappings": {
@@ -250,57 +252,6 @@ Create a `generator.config.json` file in your project root:
 }
 ```
 
-### Environment Variables
-
-| Variable                   | Description                         | Example                          |
-| -------------------------- | ----------------------------------- | -------------------------------- |
-| `GENERATOR_MODEL`          | Target Prisma model name            | `User`                           |
-| `GENERATOR_MODULE_PATH`    | Output module path                  | `user`                           |
-| `GENERATOR_QUERIES`        | Comma-separated query operations    | `findUser,findUsers`             |
-| `GENERATOR_MUTATIONS`      | Comma-separated mutation operations | `createUser,updateUser`          |
-| `GENERATOR_CUSTOM_PLURALS` | Custom pluralization rules          | `user:users,category:categories` |
-| `GENERATOR_PRESET_USED`    | Configuration preset to use         | `default`                        |
-
-## 🔌 Plugin System
-
-The generator features a powerful plugin system for extending functionality.
-
-### Built-in Plugins
-
-- **Logging Plugin**: Provides detailed generation logs
-- **Formatting Plugin**: Automatically formats generated code
-- **Validation Plugin**: Validates generated schemas
-- **Field Transform Plugin**: Transforms field names and types
-
-### Creating Custom Plugins
-
-```typescript
-import { Plugin } from 'prisma-generator-graphql-test'
-
-export const myCustomPlugin: Plugin = {
-  name: 'my-custom-plugin',
-  version: '1.0.0',
-  description: 'My custom plugin',
-
-  hooks: {
-    onGenerationFinished: async payload => {
-      console.log('Generation completed for:', payload.modelName)
-    },
-    onModuleNotFound: async payload => {
-      console.log('Module not found:', payload.modulePath)
-    },
-  },
-
-  initialize: async pluginManager => {
-    console.log('Plugin initialized')
-  },
-
-  cleanup: async () => {
-    console.log('Plugin cleaned up')
-  },
-}
-```
-
 ## 🎨 Templates
 
 ### GraphQL Schema Template
@@ -318,6 +269,21 @@ The generator uses Handlebars templates for flexible output generation:
       {{type}}{{#if required}}!{{/if}}
     {{/each}}
     }
+
+  {{/each}}
+{{/if}}
+
+{{#if hasOutputTypes}}
+  {{#each outputTypes}}
+    type
+    {{name}}
+    {
+    {{#each fields}}
+      {{name}}:
+      {{type}}{{#if required}}!{{/if}}
+    {{/each}}
+    }
+
   {{/each}}
 {{/if}}
 
@@ -329,21 +295,151 @@ The generator uses Handlebars templates for flexible output generation:
   {{/each}}
   }
 {{/if}}
+
+{{#if hasMutations}}
+  extend type Mutation {
+  {{#each mutations}}
+    {{name}}{{#if args}}({{args}}){{/if}}:
+    {{returnType}}
+  {{/each}}
+  }
+{{/if}}
 ```
 
 ### Resolver Template
 
 ```handlebars
-export const resolvers{{pascalCase modelName}} = {
+import { {{pascalCase modelName}}Module } from "./module-types"
+
+export const resolvers{{pascalCase modelName}}: {{pascalCase modelName}}Module.Resolvers = {
 {{#if hasQueries}}
   Query: {
 {{#each queries}}
     {{name}}: async (_parent, args, context) => {
-      return (await {{../dataSourceMethod}}).{{../modelNameLower}}.{{operationType}}(args);
+      {{#if (eq operationType "findUnique")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.findUnique({
+        where: args.where,
+      });
+      {{else if (eq operationType "findFirst")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.findFirst({
+        where: args.where,
+      });
+      {{else if (eq operationType "findMany")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.findMany({
+        where: args.where,
+        orderBy: args.orderBy,
+        take: args.take,
+        skip: args.skip,
+      });
+      {{else if (eq operationType "count")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.count({
+        where: args.where,
+      });
+      {{else if (eq operationType "aggregate")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.aggregate({
+        where: args.where,
+        _count: args._count,
+        _avg: args._avg,
+        _sum: args._sum,
+        _min: args._min,
+        _max: args._max,
+      });
+      {{else if (eq operationType "groupBy")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.groupBy({
+        by: args.by,
+        where: args.where,
+        having: args.having,
+        orderBy: args.orderBy,
+        take: args.take,
+        skip: args.skip,
+      });
+      {{else}}
+      throw new Error('{{../errorMessageTemplate}}'.replace('{operationName}', '{{name}}'));
+      {{/if}}
     },
 {{/each}}
   },
 {{/if}}
+{{#if hasMutations}}
+  Mutation: {
+{{#each mutations}}
+    {{name}}: async (_parent, args, context) => {
+      {{#if (eq operationType "create")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.create({
+        data: args.data,
+      });
+      {{else if (eq operationType "createMany")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.createMany({
+        data: args.data,
+        skipDuplicates: args.skipDuplicates,
+      });
+      {{else if (eq operationType "update")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.update({
+        where: args.where,
+        data: args.data,
+      });
+      {{else if (eq operationType "updateMany")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.updateMany({
+        where: args.where,
+        data: args.data,
+      });
+      {{else if (eq operationType "upsert")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.upsert({
+        where: args.where,
+        create: args.create,
+        update: args.update,
+      });
+      {{else if (eq operationType "delete")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.delete({
+        where: args.where,
+      });
+      {{else if (eq operationType "deleteMany")}}
+      return {{../dataSourceMethod}}.{{../modelNameLower}}.deleteMany({
+        where: args.where,
+      });
+      {{else}}
+      throw new Error('{{../errorMessageTemplate}}'.replace('{operationName}', '{{name}}'));
+      {{/if}}
+    },
+{{/each}}
+  },
+{{/if}}
+};
+```
+
+## 🔌 Plugin System
+
+The generator features a plugin system for extending functionality.
+
+### Built-in Plugins
+
+- **Logging Plugin**: Provides detailed generation logs
+- **Formatting Plugin**: Automatically formats generated code
+- **Validation Plugin**: Validates generated schemas
+- **Field Transform Plugin**: Transforms field names and types
+
+### Creating Custom Plugins
+
+Plugins can be configured in your `generator.config.json` file. For advanced use cases, you can create custom plugins by implementing the plugin interface defined in `src/plugins/types.ts`.
+
+**Example plugin configuration:**
+
+```json
+{
+  "plugins": [
+    {
+      "name": "logging",
+      "config": {
+        "level": "debug"
+      }
+    },
+    {
+      "name": "formatting",
+      "config": {
+        "prettier": true
+      }
+    }
+  ]
 }
 ```
 
@@ -397,10 +493,9 @@ prisma-graphql-module-generator/
 │   ├── templates/             # Handlebars templates
 │   │   └── handlebars/
 │   ├── types/                 # TypeScript type definitions
-│   └── utils/                 # Utility functions
+│   ├── utils/                 # Utility functions
+│   └── tests/                 # Test files
 ├── docs/                      # Documentation
-├── examples/                  # Usage examples
-├── tests/                     # Test files
 └── prisma/                    # Example Prisma schema
     └── presets.json          # Saved CLI presets
 ```
@@ -410,8 +505,14 @@ prisma-graphql-module-generator/
 - `pnpm build` - Build the TypeScript project
 - `pnpm dev` - Start development mode with watch
 - `pnpm test` - Run the test suite
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:coverage` - Run tests with coverage report
 - `pnpm start` - Run the compiled generator
 - `pnpm type-check` - Run TypeScript type checking
+- `pnpm lint` - Lint the codebase
+- `pnpm lint:fix` - Lint and automatically fix issues
+- `pnpm format` - Format code with Prettier
+- `pnpm format:check` - Check code formatting
 
 ## 🧪 Testing
 
@@ -437,26 +538,69 @@ Test categories:
 
 ## 📖 Examples
 
-### Basic Usage
+### Basic Usage with CLI
 
 ```bash
-# Set environment variables
-export GENERATOR_MODEL="Post"
-export GENERATOR_MODULE_PATH="post"
-export GENERATOR_QUERIES="findPost,findPosts"
-export GENERATOR_MUTATIONS="createPost,updatePost,deletePost"
+# Run the interactive CLI
+npx prisma-gql-cli
 
-# Generate GraphQL files
+# Select your model (e.g., Post)
+# Choose operations: SDL, Queries, Mutations
+# Select specific queries: findUnique, findMany
+# Select specific mutations: create, update, delete
+
+# After CLI configuration, generate the files
 npx prisma generate
+```
+
+### Using Saved Presets
+
+```bash
+# List available presets
+npx prisma-gql-cli --list
+
+# Use a specific preset
+npx prisma-gql-cli my-preset-name
 ```
 
 ### Advanced Configuration
 
+**Note:** For advanced customization, you can create a `generator.config.json` file or TypeScript configuration in your project root.
+
+**JSON Configuration Example:**
+
+```json
+{
+  "generator": {
+    "prettyName": "My Blog GraphQL Generator",
+    "defaultOutput": "./src/generated"
+  },
+  "files": {
+    "extensions": {
+      "graphql": ".gql",
+      "resolver": ".resolvers.ts"
+    }
+  },
+  "content": {
+    "resolverImplementation": {
+      "dataSourceMethod": "context.dataSources.prisma()",
+      "errorMessageTemplate": "{operationName} resolver not implemented"
+    }
+  },
+  "plugins": [
+    { "name": "logging", "config": {} },
+    { "name": "formatting", "config": {} }
+  ]
+}
+```
+
+**TypeScript Configuration Example:**
+
+For advanced TypeScript-based configuration, you can reference the configuration interfaces in the source code.
+
 ```typescript
 // generator.config.ts
-import { GeneratorConfig } from 'prisma-generator-graphql-test'
-
-const config: GeneratorConfig = {
+const config = {
   generator: {
     prettyName: 'My Blog GraphQL Generator',
     defaultOutput: './src/generated',
@@ -470,12 +614,12 @@ const config: GeneratorConfig = {
   content: {
     resolverImplementation: {
       dataSourceMethod: 'context.dataSources.prisma()',
-      errorMessageTemplate: 'Resolver {operationName} not implemented',
+      errorMessageTemplate: '{operationName} resolver not implemented',
     },
   },
   plugins: [
-    { name: 'logging', config: { level: 'debug' } },
-    { name: 'formatting', config: { prettier: true } },
+    { name: 'logging', config: {} },
+    { name: 'formatting', config: {} },
   ],
 }
 
@@ -517,9 +661,7 @@ Enable debug logging:
   "plugins": [
     {
       "name": "logging",
-      "config": {
-        "logLevel": "debug"
-      }
+      "config": {}
     }
   ]
 }
@@ -537,7 +679,7 @@ Enable debug logging:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please follow these steps:
 
 ### Development Setup
 
@@ -591,12 +733,11 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
 
-## 🆘 Support
+## 🆘 Support & Resources
 
-- 📖 [Documentation](https://github.com/mhoppehh/prisma-graphql-module-generator#readme)
+- 📖 [Configuration Documentation](./docs/CONFIGURATION.md)
 - 🐛 [Issue Tracker](https://github.com/mhoppehh/prisma-graphql-module-generator/issues)
 - 💬 [Discussions](https://github.com/mhoppehh/prisma-graphql-module-generator/discussions)
-- 📧 [Email Support](mailto:support@prisma-graphql-module-generator.com)
 
 ## 📄 License
 
@@ -607,7 +748,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Prisma](https://prisma.io) for the excellent database toolkit
 - [GraphQL](https://graphql.org) for the query language and runtime
 - [Handlebars](https://handlebarsjs.com) for the templating system
-- The open-source community for inspiration and contributions
+- All contributors who have helped improve this project
 
 ---
 
@@ -616,18 +757,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   <p>
     <a href="https://github.com/mhoppehh/prisma-graphql-module-generator">GitHub</a> •
     <a href="https://npmjs.com/package/prisma-graphql-module-generator">NPM</a> •
-    <a href="CHANGELOG.md">Changelog</a> •
-    <a href="CONTRIBUTING.md">Contributing</a>
+    <a href="CHANGELOG.md">Changelog</a>
   </p>
 </div>
-- All contributors who have helped improve this project
-
-## 📞 Support
-
-- 📖 [Documentation](./docs/CONFIGURATION.md)
-- 🐛 [Issue Tracker](https://github.com/mhoppehh/prisma-graphql-module-generator/issues)
-- 💬 [Discussions](https://github.com/mhoppehh/prisma-graphql-module-generator/discussions)
-
----
-
-Made with ❤️ by the Prisma GraphQL Generator team
