@@ -5,22 +5,22 @@ describe('Cartesian Product Test Verification', () => {
     const testParameters = {
       models: {
         values: ['A', 'B'],
-        multi: false
+        multi: false,
       },
       queries: {
         values: ['q1', 'q2'],
-        multi: true
+        multi: true,
       },
       mutations: {
         values: ['m1'],
-        multi: true
-      }
+        multi: true,
+      },
     }
 
     const combinations = generateParameterCombinations(testParameters)
-    
+
     expect(combinations).toHaveLength(16)
-    
+
     expect(combinations[0]).toEqual([['A'], [], []])
     expect(combinations[1]).toEqual([['A'], [], ['m1']])
     expect(combinations[2]).toEqual([['A'], ['q1'], []])
@@ -29,7 +29,7 @@ describe('Cartesian Product Test Verification', () => {
     expect(combinations[5]).toEqual([['A'], ['q2'], ['m1']])
     expect(combinations[6]).toEqual([['A'], ['q1', 'q2'], []])
     expect(combinations[7]).toEqual([['A'], ['q1', 'q2'], ['m1']])
-    
+
     expect(combinations[8]).toEqual([['B'], [], []])
     expect(combinations[15]).toEqual([['B'], ['q1', 'q2'], ['m1']])
   })
@@ -38,24 +38,24 @@ describe('Cartesian Product Test Verification', () => {
     const generatorParameters = {
       models: {
         values: ['Employee', 'Category', 'Customer'],
-        multi: false
+        multi: false,
       },
       queries: {
         values: ['findUnique', 'findMany'],
-        multi: true
+        multi: true,
       },
       mutations: {
         values: ['create', 'update'],
-        multi: true
+        multi: true,
       },
       modulePaths: {
         values: ['./src/modules', './api/graphql'],
-        multi: false
-      }
+        multi: false,
+      },
     }
 
     const combinations = generateParameterCombinations(generatorParameters)
-    
+
     expect(combinations).toHaveLength(96)
 
     const firstCombination = combinations[0]
@@ -63,13 +63,13 @@ describe('Cartesian Product Test Verification', () => {
     expect(firstCombination[0]).toEqual(['Employee'])
     expect(firstCombination[3]).toEqual(['./src/modules'])
 
-    const combinationsWithNoOps = combinations.filter(combo => 
-      combo[1].length === 0 && combo[2].length === 0
+    const combinationsWithNoOps = combinations.filter(
+      combo => combo[1].length === 0 && combo[2].length === 0,
     )
-    const combinationsWithBothOps = combinations.filter(combo => 
-      combo[1].length > 0 && combo[2].length > 0
+    const combinationsWithBothOps = combinations.filter(
+      combo => combo[1].length > 0 && combo[2].length > 0,
     )
-    
+
     expect(combinationsWithNoOps.length).toBeGreaterThan(0)
     expect(combinationsWithBothOps.length).toBeGreaterThan(0)
   })
@@ -78,20 +78,20 @@ describe('Cartesian Product Test Verification', () => {
     const testParameters = {
       models: {
         values: ['A', 'B'],
-        multi: false
+        multi: false,
       },
       queries: {
         values: ['q1'],
-        multi: true
+        multi: true,
       },
       mutations: {
         values: ['m1'],
-        multi: true
-      }
+        multi: true,
+      },
     }
 
     const allCombinations = generateParameterCombinations(testParameters)
-    
+
     const validCombinations = allCombinations.filter(combo => {
       const queries = combo[1]
       const mutations = combo[2]
@@ -112,24 +112,31 @@ describe('Cartesian Product Test Verification', () => {
     const prismaParameters = {
       models: {
         values: [
-          'Employee', 'Category', 'Customer', 'Order', 'Product', 
-          'Supplier', 'Region', 'Territory', 'EmployeeTerritory'
+          'Employee',
+          'Category',
+          'Customer',
+          'Order',
+          'Product',
+          'Supplier',
+          'Region',
+          'Territory',
+          'EmployeeTerritory',
         ],
-        multi: false
+        multi: false,
       },
       operations: {
         values: [
           { type: 'query', op: 'findMany' },
           { type: 'query', op: 'findUnique' },
           { type: 'mutation', op: 'create' },
-          { type: 'mutation', op: 'update' }
+          { type: 'mutation', op: 'update' },
         ],
-        multi: true
-      }
+        multi: true,
+      },
     }
 
     const combinations = generateParameterCombinations(prismaParameters)
-    
+
     expect(combinations).toHaveLength(144)
 
     combinations.forEach(combo => {

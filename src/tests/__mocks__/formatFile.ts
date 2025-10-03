@@ -1,1 +1,1 @@
-export const formatFile = jest.fn().mockResolvedValue(undefined);
+export const formatFile = jest.fn().mockResolvedValue(undefined)

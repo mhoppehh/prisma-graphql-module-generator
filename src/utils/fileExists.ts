@@ -42,12 +42,16 @@ export const checkExistingFiles = async (
   if (sdlExists) {
     try {
       sdlContent = await fs.readFile(sdlPath, 'utf8')
-    } catch {}
+    } catch {
+      // Ignore read errors
+    }
   }
   if (resolverExists) {
     try {
       resolverContent = await fs.readFile(resolverPath, 'utf8')
-    } catch {}
+    } catch {
+      // Ignore read errors
+    }
   }
   return {
     sdl: { exists: sdlExists, path: sdlPath, content: sdlContent },

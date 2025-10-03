@@ -1,11 +1,6 @@
 import { promises as fs } from 'fs'
-import * as pathModule from 'path'
 
-import {
-  fileExists,
-  modelToFileName,
-  checkExistingFiles,
-} from '../../utils/fileExists'
+import { fileExists, modelToFileName, checkExistingFiles } from '../../utils/fileExists'
 
 describe('fileExists Utility', () => {
   beforeEach(() => {

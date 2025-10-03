@@ -1,6 +1,4 @@
-import { 
-  Plugin,
-} from '../types'
+import { Plugin } from '../types'
 
 /**
  * Configuration for the field transformation plugin
@@ -19,11 +17,10 @@ export interface FieldTransformConfig {
 export const fieldTransformPlugin: Plugin = {
   name: 'field-transform-plugin',
   version: '1.0.0',
-  description: 'Transforms model fields during generation with custom naming, types, and directives',
+  description:
+    'Transforms model fields during generation with custom naming, types, and directives',
 
-  hooks: {
-    
-  }
+  hooks: {},
 }
 
 /**
@@ -32,12 +29,12 @@ export const fieldTransformPlugin: Plugin = {
 export function createFieldTransformPlugin(config: FieldTransformConfig): Plugin {
   return {
     ...fieldTransformPlugin,
-    initialize: async (pluginManager) => {
+    initialize: async pluginManager => {
       const context = {
         stage: 'onGenerateStart' as const,
         timestamp: new Date(),
-        metadata: { fieldTransformConfig: config }
+        metadata: { fieldTransformConfig: config },
       }
-    }
+    },
   }
 }

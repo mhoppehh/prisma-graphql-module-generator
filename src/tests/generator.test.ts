@@ -3,7 +3,6 @@ import { GeneratorOptions } from '@prisma/generator-helper'
 import { writeFileSafely } from '../utils/writeFileSafely'
 import { generateGraphQLFiles } from '../helpers'
 import { fileExists } from '../utils/fileExists'
-import { config as generatorConfig } from '../config/config'
 import fs from 'fs/promises'
 
 jest.mock('../utils/writeFileSafely')

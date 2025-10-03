@@ -9,9 +9,7 @@ describe('readExistingFile Utility', () => {
 
   it('should read existing file content', async () => {
     jest.spyOn(fs, 'readFile').mockResolvedValueOnce('file content')
-    await expect(readExistingFile('/path/to/file')).resolves.toBe(
-      'file content',
-    )
+    await expect(readExistingFile('/path/to/file')).resolves.toBe('file content')
   })
 
   it('should handle missing file', async () => {

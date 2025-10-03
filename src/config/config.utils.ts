@@ -42,6 +42,7 @@ export function getConfigPath(): string | undefined {
       require.resolve(configPath)
       return configPath
     } catch {
+      // Config file doesn't exist, try next one
     }
   }
 
